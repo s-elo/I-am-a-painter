@@ -1,7 +1,12 @@
 import tensorflow as tf
+import os
 
-MONET_FILENAMES = tf.io.gfile.glob('./dataset/monet_tfrec/*.tfrec')
-PHOTO_FILENAMES = tf.io.gfile.glob('./dataset/photo_tfrec/*.tfrec')
+if os.path.exists('./dataset'):
+    MONET_FILENAMES = tf.io.gfile.glob('./dataset/monet_tfrec/*.tfrec')
+    PHOTO_FILENAMES = tf.io.gfile.glob('./dataset/photo_tfrec/*.tfrec')
+else:
+    MONET_FILENAMES = tf.io.gfile.glob('../input/gan-getting-started/monet_tfrec/*.tfrec')
+    PHOTO_FILENAMES = tf.io.gfile.glob('../input/gan-getting-started/photo_tfrec/*.tfrec')
 
 IMAGE_SIZE = [256, 256]
 
