@@ -3,6 +3,9 @@ monet_tfrec
 photo_jpg
 photo_tfrec
 
+ret_imgs
+images.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
