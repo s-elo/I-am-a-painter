@@ -6,6 +6,8 @@ photo_tfrec
 ret_imgs
 images.zip
 
+saved_generator
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
