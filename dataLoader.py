@@ -76,7 +76,7 @@ def imagenet_idx_to_label():
     return label_map
 
 
-def get_saliency_imgs():
+def get_saliency_data():
     imgs = []
     labels = []
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     monet_ds, photo_ds = get_dataset()
     print(monet_ds, photo_ds)
 
-    imgs, labels = get_saliency_imgs()
+    imgs, labels = get_saliency_data()
     print(imgs.shape, labels.shape)
     # print(imagenet_class_to_idx())
     # print(imagenet_idx_to_label())
