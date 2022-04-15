@@ -1,16 +1,21 @@
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.applications.vgg16 import preprocess_input, decode_predictions, VGG16
+# from tensorflow.keras.applications.vgg16 import preprocess_input, decode_predictions, VGG16
+from tensorflow.keras.applications.vgg19 import preprocess_input, decode_predictions, VGG19
+# from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions, InceptionV3
+# from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input, decode_predictions
+# from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions, ResNet50
 import numpy as np
 
 
 def get_saliency_map(images, labels):
-    model = VGG16(weights='imagenet')
+    model = VGG19(weights='imagenet')
 
     expected_outputs = to_categorical(labels, num_classes=1000)
 
     with tf.GradientTape() as tape:
         images = tf.cast(images, tf.float32)
+
         tape.watch(images)
 
         preds = model(images, training=False)

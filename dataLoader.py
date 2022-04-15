@@ -76,7 +76,7 @@ def imagenet_idx_to_label():
     return label_map
 
 
-def get_saliency_data():
+def get_saliency_data(img_shape=(224, 224)):
     imgs = []
     labels = []
 
@@ -94,9 +94,9 @@ def get_saliency_data():
             # get the real image data
             i = cv2.imread(img_path)
             # resize
-            i = cv2.resize(i, (224, 224), interpolation=cv2.INTER_CUBIC)
+            i = cv2.resize(i, img_shape, interpolation=cv2.INTER_CUBIC)
             # reshape
-            i = np.reshape(i, (224, 224, 3)) / 255
+            i = np.reshape(i, [*img_shape, 3]) / 255
 
             imgs.append(i)
             labels.append(idx_map[class_folder])
