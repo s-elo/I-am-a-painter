@@ -1,15 +1,16 @@
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 # from tensorflow.keras.applications.vgg16 import preprocess_input, decode_predictions, VGG16
-from tensorflow.keras.applications.vgg19 import preprocess_input, decode_predictions, VGG19
-# from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions, InceptionV3
+# from tensorflow.keras.applications.vgg19 import preprocess_input, decode_predictions, VGG19
+from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions, InceptionV3
 # from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input, decode_predictions
 # from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions, ResNet50
 import numpy as np
+from saliency.graph_cut import graph_cut
 
 
 def get_saliency_map(images, labels):
-    model = VGG19(weights='imagenet')
+    model = InceptionV3(weights='imagenet')
 
     expected_outputs = to_categorical(labels, num_classes=1000)
 
@@ -34,3 +35,7 @@ def get_saliency_map(images, labels):
     normalized_tensors = tf.squeeze(normalized_tensors)
 
     return normalized_tensors, results
+
+
+def saliency_graph_cut(imgs, saliency_map, SIGMA, threshold):
+    return graph_cut(imgs, saliency_map, SIGMA, threshold)

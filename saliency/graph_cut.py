@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def get_mask(image, SIGMA):
+def get_mask(image, SIGMA, threshold):
     g = maxflow.Graph[int]()
     nodeids = g.add_grid_nodes(image.shape)
 
@@ -33,10 +33,10 @@ def get_mask(image, SIGMA):
         for col in range(max_col):
             pixel_val = image[row, col]
 
-            if (pixel_val > 5):
-                g.add_tedge(nodeids[row, col], K, 0)
+            if (pixel_val > threshold):
+                g.add_tedge(nodeids[row, col], K, pixel_val)
             else:
-                g.add_tedge(nodeids[row, col], 0, K)
+                g.add_tedge(nodeids[row, col], pixel_val, K)
 
     # Find the maximum flow.
     g.maxflow()
@@ -54,6 +54,22 @@ def get_cut_img(img, mask):
     cut_img = mask * img
 
     return cut_img
+
+
+def graph_cut(imgs, saliency_map, SIGMA, threshold):
+    cut_imgs = []
+    masks = []
+
+    for idx in range(0, len(imgs)):
+        img = imgs[idx]
+        sm = saliency_map[idx].numpy()
+        mask = get_mask(sm, SIGMA, threshold)
+        cut_img = get_cut_img(img, mask)
+
+        masks.append(mask)
+        cut_imgs.append(cut_img)
+
+    return cut_imgs, masks
 
 
 def get_weights(ip, iq, SIGMA):
