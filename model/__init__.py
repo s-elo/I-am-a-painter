@@ -8,20 +8,13 @@ from model.loss_def import discriminator_loss, generator_fool_loss, cycle_loss, 
 from model.diff_aug import aug_fn
 from model.utils import load_models
 
-# define the optimizers
-generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
-discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-
-
-def get_model():
+def get_model(from_saved=False, learning_schedule=False, lambda_cycle=tf.Variable(8.0), lambda_id=tf.Variable(1.)):
     if (os.path.exists('./checkpoints') == True):
         # load from the checkpoints
-        generator_g, generator_f, discriminator_x, discriminator_y = load_models(
+        generator_g, generator_f, discriminator_y, discriminator_x = load_models(
             load_path='./checkpoints', model='all')
-    else:
+    elif (from_saved == False and os.path.exists('./checkpoints') == False):
         # original photo -> fake monet
         generator_g = get_generator()
         # fake monet -> fake original photo
@@ -31,9 +24,42 @@ def get_model():
         discriminator_x = get_discriminator()
         # distinguish monet and fake monet
         discriminator_y = get_discriminator()
+    elif (from_saved == True and os.path.exists('./checkpoints') == False):
+        # load from the saved_models
+        generator_g, generator_f, discriminator_y, discriminator_x = load_models(
+            load_path='./saved_models', model='all')
+
+    # define the optimizers
+    if (learning_schedule == False):
+        generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+
+        discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+    else:
+        initial_learning_rate = 1e-4
+        decay_steps = 28000
+        lr_schedule_g = tf.keras.optimizers.schedules.PolynomialDecay(
+            initial_learning_rate, decay_steps, end_learning_rate=2e-5, power=1,
+            cycle=False, name=None
+        )
+        lr_schedule_d = tf.keras.optimizers.schedules.PolynomialDecay(
+            initial_learning_rate, decay_steps, end_learning_rate=2e-5, power=1,
+            cycle=False, name=None
+        )
+
+        generator_g_optimizer = tf.keras.optimizers.Adam(
+            lr_schedule_g, beta_1=0.5)
+        generator_f_optimizer = tf.keras.optimizers.Adam(
+            lr_schedule_g, beta_1=0.5)
+
+        discriminator_y_optimizer = tf.keras.optimizers.Adam(
+            lr_schedule_d, beta_1=0.5)
+        discriminator_x_optimizer = tf.keras.optimizers.Adam(
+            lr_schedule_d, beta_1=0.5)
 
     model = CycleGan(generator_g, generator_f,
-                     discriminator_y, discriminator_x)
+                     discriminator_y, discriminator_x, lambda_cycle, lambda_id)
     model.compile(m_gen_optimizer=generator_g_optimizer,
                   p_gen_optimizer=generator_f_optimizer,
                   m_disc_optimizer=discriminator_y_optimizer,
@@ -53,7 +79,9 @@ class CycleGan(tf.keras.Model):
         monet_discriminator,
         photo_discriminator,
         lambda_cycle=tf.Variable(8.0),
+        # lambda_cycle=tf.Variable(0.11073),
         lambda_id=tf.Variable(1.)
+        # lambda_id=tf.Variable(0.01384)
     ):
         super(CycleGan, self).__init__()
         self.m_gen = monet_generator

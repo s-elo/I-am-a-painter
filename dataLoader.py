@@ -42,7 +42,7 @@ def load_dataset(filenames):
     return dataset
 
 
-def get_dataset(batch_size=16, repeat=False):
+def get_dataset(batch_size=16, repeat=False, shuffle=False):
     monet_ds = load_dataset(MONET_FILENAMES)
     photo_ds = load_dataset(PHOTO_FILENAMES)
 
@@ -50,8 +50,9 @@ def get_dataset(batch_size=16, repeat=False):
         monet_ds = monet_ds.repeat()
         photo_ds = photo_ds.repeat()
 
-    monet_ds = monet_ds.shuffle(batch_size)
-    photo_ds = photo_ds.shuffle(batch_size)
+    if (shuffle != False):
+        monet_ds = monet_ds.shuffle(batch_size)
+        photo_ds = photo_ds.shuffle(batch_size)
 
     monet_ds = monet_ds.batch(batch_size, drop_remainder=True)
     photo_ds = photo_ds.batch(batch_size, drop_remainder=True)
