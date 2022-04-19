@@ -6,6 +6,7 @@ from model.generator import get_generator
 from model.discriminator import get_discriminator
 from model.loss_def import discriminator_loss, generator_fool_loss, cycle_loss, identity_loss
 from model.diff_aug import aug_fn
+from model.utils import load_models
 
 # define the optimizers
 generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -16,15 +17,20 @@ discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
 
 def get_model():
-    # original photo -> fake monet
-    generator_g = get_generator()
-    # fake monet -> fake original photo
-    generator_f = get_generator()
+    if (os.path.exists('./checkpoints') == True):
+        # load from the checkpoints
+        generator_g, generator_f, discriminator_x, discriminator_y = load_models(
+            load_path='./checkpoints', model='all')
+    else:
+        # original photo -> fake monet
+        generator_g = get_generator()
+        # fake monet -> fake original photo
+        generator_f = get_generator()
 
-    # distinguish original photo and fake original photo
-    discriminator_x = get_discriminator()
-    # distinguish monet and fake monet
-    discriminator_y = get_discriminator()
+        # distinguish original photo and fake original photo
+        discriminator_x = get_discriminator()
+        # distinguish monet and fake monet
+        discriminator_y = get_discriminator()
 
     model = CycleGan(generator_g, generator_f,
                      discriminator_y, discriminator_x)
@@ -77,6 +83,8 @@ class CycleGan(tf.keras.Model):
         self.disc_loss_fn = disc_loss_fn
         self.cycle_loss_fn = cycle_loss_fn
         self.identity_loss_fn = identity_loss_fn
+
+        self.save_checkpoints_path = './checkpoints'
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data
@@ -168,7 +176,11 @@ class CycleGan(tf.keras.Model):
         }
 
     def save(self, save_path='./saved_models'):
-        print('save models...')
+        # if it is not saving checkpoints
+        if (save_path != self.save_checkpoints_path):
+            # remove the checkpoints
+            shutil.rmtree(self.save_checkpoints_path)
+
         # store the model for later use
         if os.path.exists(save_path) == True:
             shutil.rmtree(save_path)
@@ -193,10 +205,11 @@ class CustomCallback(tf.keras.callbacks.Callback):
         new_id = tf.math.maximum(new_id, tf.Variable(0.005))
         self.model.lambda_id.assign(new_id)
 
-    # just for showing the result after each epoch
-    # def on_epoch_end(self, epoch, logs=None):
-    #     image = self.model.m_gen(self.model.e_photo)
-    #     plt.figure(figsize=(6, 6))
-    #     plt.title("Monet-esque Photo")
-    #     plt.imshow(image[0] * 0.5 + 0.5)
-    #     plt.show()
+    # just for showing the result after each epoch and save the checkpoints
+    def on_epoch_end(self, epoch, logs=None):
+        self.model.save(save_path=self.model.save_checkpoints_path)
+        # image = self.model.m_gen(self.model.e_photo)
+        # plt.figure(figsize=(6, 6))
+        # plt.title("Monet-esque Photo")
+        # plt.imshow(image[0] * 0.5 + 0.5)
+        # plt.show()
