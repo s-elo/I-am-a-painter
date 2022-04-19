@@ -2,6 +2,8 @@ import tensorflow as tf
 from model.generator import get_generator
 from model.discriminator import get_discriminator
 from model.loss_def import discriminator_loss, generator_fool_loss, cycle_loss, identity_loss
+from model.diff_aug import aug_fn
+
 # define the optimizers
 generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -73,6 +75,7 @@ class CycleGan(tf.keras.Model):
 
     def train_step(self, batch_data):
         real_monet, real_photo = batch_data
+        batch_size = tf.shape(real_monet)[0]
 
         with tf.GradientTape(persistent=True) as tape:
             # photo to monet back to photo
@@ -87,13 +90,24 @@ class CycleGan(tf.keras.Model):
             same_monet = self.m_gen(real_monet, training=True)
             same_photo = self.p_gen(real_photo, training=True)
 
+            # Diffaugment monet and photo
+            both_monet = tf.concat([real_monet, fake_monet], axis=0)
+            aug_monet = aug_fn(both_monet)
+            aug_real_monet = aug_monet[:batch_size]
+            aug_fake_monet = aug_monet[batch_size:]
+
+            both_photo = tf.concat([real_photo, fake_photo], axis=0)
+            aug_photo = aug_fn(both_photo)
+            aug_real_photo = aug_photo[:batch_size]
+            aug_fake_photo = aug_photo[batch_size:]
+
             # discriminator used to check, inputing real images
-            disc_real_monet = self.m_disc(real_monet, training=True)
-            disc_real_photo = self.p_disc(real_photo, training=True)
+            disc_real_monet = self.m_disc(aug_real_monet, training=True)
+            disc_real_photo = self.p_disc(aug_real_photo, training=True)
 
             # discriminator used to check, inputing fake images
-            disc_fake_monet = self.m_disc(fake_monet, training=True)
-            disc_fake_photo = self.p_disc(fake_photo, training=True)
+            disc_fake_monet = self.m_disc(aug_fake_monet, training=True)
+            disc_fake_photo = self.p_disc(aug_fake_photo, training=True)
 
             # evaluates generator loss
             monet_gen_loss = self.gen_loss_fn(disc_fake_monet)
@@ -147,3 +161,21 @@ class CycleGan(tf.keras.Model):
             "monet_disc_loss": monet_disc_loss,
             "photo_disc_loss": photo_disc_loss
         }
+
+
+class CustomCallback(tf.keras.callbacks.Callback):
+    def on_epoch_begin(self, epoch, logs=None):
+        new_val = tf.math.scalar_mul(0.7, self.model.lambda_cycle)
+        val = tf.math.maximum(tf.Variable(0.0005), new_val)
+        self.model.lambda_cycle.assign(val)
+
+        new_id = tf.math.scalar_mul(0.7, self.model.lambda_id)
+        new_id = tf.math.maximum(new_id, tf.Variable(0.005))
+        self.model.lambda_id.assign(new_id)
+
+    # def on_epoch_end(self, epoch, logs=None):
+    #     image = self.model.m_gen(self.model.e_photo)
+    #     plt.figure(figsize=(6,6))
+    #     plt.title("Monet-esque Photo")
+    #     plt.imshow(image[0] * 0.5 + 0.5)
+    #     plt.show()
