@@ -7,8 +7,13 @@ loss_obj = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
 
 def discriminator_loss(real, generated):
-    # minimize the loss between real img and label 1
-    real_loss = loss_obj(tf.ones_like(real), real)
+    # blur the expected label 1 to 0.9-1
+    real_like_ones = tf.ones_like(real)
+    smooth = tf.random.uniform([1], 0.9, 1)
+    real_like_blurred = tf.math.scalar_mul(smooth[0], real_like_ones)
+
+    # minimize the loss between real img and label 0.9-1
+    real_loss = loss_obj(real_like_blurred, real)
     # minimize the loss between fake generated img and label 0
     generated_loss = loss_obj(tf.zeros_like(generated), generated)
 
