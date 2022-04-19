@@ -63,3 +63,19 @@ def up_sample(filters, size, apply_dropout=False):
 
 def instance_norm(x):
     return tfa.layers.InstanceNormalization()(x)
+
+
+def load_models(load_path='./saved_models', model='all'):
+    if (model != 'all'):
+        return tf.keras.models.load_model(f'{load_path}/{model}', compile=False)
+    else:
+        m_gen = tf.keras.models.load_model(
+            f'{load_path}/m_gen', compile=False)
+        p_gen = tf.keras.models.load_model(
+            f'{load_path}/p_gen', compile=False)
+        m_disc = tf.keras.models.load_model(
+            f'{load_path}/m_disc', compile=False)
+        p_disc = tf.keras.models.load_model(
+            f'{load_path}/p_disc', compile=False)
+
+        return m_gen, p_gen, m_disc, p_disc

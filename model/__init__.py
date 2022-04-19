@@ -1,4 +1,7 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import os
+import shutil
 from model.generator import get_generator
 from model.discriminator import get_discriminator
 from model.loss_def import discriminator_loss, generator_fool_loss, cycle_loss, identity_loss
@@ -24,7 +27,7 @@ def get_model():
     discriminator_y = get_discriminator()
 
     model = CycleGan(generator_g, generator_f,
-                     discriminator_y, discriminator_x, 10)
+                     discriminator_y, discriminator_x)
     model.compile(m_gen_optimizer=generator_g_optimizer,
                   p_gen_optimizer=generator_f_optimizer,
                   m_disc_optimizer=discriminator_y_optimizer,
@@ -164,6 +167,18 @@ class CycleGan(tf.keras.Model):
             "photo_disc_loss": photo_disc_loss
         }
 
+    def save(self, save_path='./saved_models'):
+        print('save models...')
+        # store the model for later use
+        if os.path.exists(save_path) == True:
+            shutil.rmtree(save_path)
+        os.mkdir(save_path)
+
+        self.m_gen.save(f'{save_path}/m_gen')
+        self.p_gen.save(f'{save_path}/p_gen')
+        self.m_disc.save(f'{save_path}/m_disc')
+        self.p_disc.save(f'{save_path}/p_disc')
+
 
 class CustomCallback(tf.keras.callbacks.Callback):
     # decay the lambda_cycle and lambda_id after each epoch
@@ -181,7 +196,7 @@ class CustomCallback(tf.keras.callbacks.Callback):
     # just for showing the result after each epoch
     # def on_epoch_end(self, epoch, logs=None):
     #     image = self.model.m_gen(self.model.e_photo)
-    #     plt.figure(figsize=(6,6))
+    #     plt.figure(figsize=(6, 6))
     #     plt.title("Monet-esque Photo")
     #     plt.imshow(image[0] * 0.5 + 0.5)
     #     plt.show()
