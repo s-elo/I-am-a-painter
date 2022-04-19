@@ -43,7 +43,8 @@ class CycleGan(tf.keras.Model):
         photo_generator,
         monet_discriminator,
         photo_discriminator,
-        lambda_cycle=10,
+        lambda_cycle=tf.Variable(8.0),
+        lambda_id=tf.Variable(1.)
     ):
         super(CycleGan, self).__init__()
         self.m_gen = monet_generator
@@ -51,6 +52,7 @@ class CycleGan(tf.keras.Model):
         self.m_disc = monet_discriminator
         self.p_disc = photo_discriminator
         self.lambda_cycle = lambda_cycle
+        self.lambda_id = lambda_id
 
     def compile(
         self,
@@ -120,10 +122,10 @@ class CycleGan(tf.keras.Model):
             # evaluates total generator loss
             total_monet_gen_loss = monet_gen_loss + total_cycle_loss + \
                 self.identity_loss_fn(
-                    real_monet, same_monet, self.lambda_cycle)
+                    real_monet, same_monet, self.lambda_id)
             total_photo_gen_loss = photo_gen_loss + total_cycle_loss + \
                 self.identity_loss_fn(
-                    real_photo, same_photo, self.lambda_cycle)
+                    real_photo, same_photo, self.lambda_id)
 
             # evaluates discriminator loss
             monet_disc_loss = self.disc_loss_fn(
@@ -164,15 +166,19 @@ class CycleGan(tf.keras.Model):
 
 
 class CustomCallback(tf.keras.callbacks.Callback):
+    # decay the lambda_cycle and lambda_id after each epoch
     def on_epoch_begin(self, epoch, logs=None):
         new_val = tf.math.scalar_mul(0.7, self.model.lambda_cycle)
+        # minimum 0.0005
         val = tf.math.maximum(tf.Variable(0.0005), new_val)
         self.model.lambda_cycle.assign(val)
 
         new_id = tf.math.scalar_mul(0.7, self.model.lambda_id)
+        # minimum 0.005
         new_id = tf.math.maximum(new_id, tf.Variable(0.005))
         self.model.lambda_id.assign(new_id)
 
+    # just for showing the result after each epoch
     # def on_epoch_end(self, epoch, logs=None):
     #     image = self.model.m_gen(self.model.e_photo)
     #     plt.figure(figsize=(6,6))
