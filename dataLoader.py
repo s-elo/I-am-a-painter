@@ -50,6 +50,9 @@ def get_dataset(batch_size=16, repeat=False):
         monet_ds = monet_ds.repeat()
         photo_ds = photo_ds.repeat()
 
+    monet_ds = monet_ds.shuffle(batch_size)
+    photo_ds = photo_ds.shuffle(batch_size)
+
     monet_ds = monet_ds.batch(batch_size, drop_remainder=True)
     photo_ds = photo_ds.batch(batch_size, drop_remainder=True)
 
