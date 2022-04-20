@@ -1,6 +1,7 @@
 import maxflow
 import numpy as np
 import math
+import cv2
 
 
 def get_mask(image, SIGMA, threshold):
@@ -28,15 +29,26 @@ def get_mask(image, SIGMA, threshold):
                 K = max(K, weight)
 
     # Add the terminal edges.
-    # g.add_grid_tedges(nodeids, 255-sm, sm)
+    # g.add_grid_tedges(nodeids, 255-image, image)
+    # get the threshold using OTSU
+
+    dilate_kernel = np.ones((2, 2), 'uint8')
+    # erode_kernel = np.ones((3, 3), 'uint8')
+
+    threshold_img = cv2.dilate(image, dilate_kernel, iterations=10)
+    _, threshold_img = cv2.threshold(
+        threshold_img, threshold, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # threshold_img = cv2.erode(threshold_img, erode_kernel, iterations=2)
+    # threshold_img = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                                       cv2.THRESH_BINARY, threshold, 5)
+    # threshold_img = cv2.dilate(threshold_img, np.ones((5, 5), 'uint8'), iterations=1)
+
     for row in range(max_row):
         for col in range(max_col):
-            pixel_val = image[row, col]
-
-            if (pixel_val > threshold):
-                g.add_tedge(nodeids[row, col], K, pixel_val)
+            if (threshold_img[row, col] == 255):
+                g.add_tedge(nodeids[row, col], K, 0)
             else:
-                g.add_tedge(nodeids[row, col], pixel_val, K)
+                g.add_tedge(nodeids[row, col], 0, K)
 
     # Find the maximum flow.
     g.maxflow()
@@ -62,14 +74,14 @@ def graph_cut(imgs, saliency_map, SIGMA, threshold):
 
     for idx in range(0, len(imgs)):
         img = imgs[idx]
-        sm = saliency_map[idx].numpy()
+        sm = saliency_map[idx]
         mask = get_mask(sm, SIGMA, threshold)
         cut_img = get_cut_img(img, mask)
 
         masks.append(mask)
         cut_imgs.append(cut_img)
 
-    return cut_imgs, masks
+    return np.array(cut_imgs), np.array(masks)
 
 
 def get_weights(ip, iq, SIGMA):

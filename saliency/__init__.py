@@ -14,6 +14,8 @@ def get_saliency_map(images, labels):
 
     expected_outputs = to_categorical(labels, num_classes=1000)
 
+    smaps = []
+
     with tf.GradientTape() as tape:
         images = tf.cast(images, tf.float32)
 
@@ -27,14 +29,35 @@ def get_saliency_map(images, labels):
             expected_outputs, preds)
 
     grads = tape.gradient(losses, images)
-    # supress the channel dimension
-    grayscale_tensors = tf.reduce_sum(tf.abs(grads), axis=-1)
-    # normalizaion
-    normalized_tensors = tf.cast(255 * (grayscale_tensors - tf.reduce_min(grayscale_tensors)) / (
-        tf.reduce_max(grayscale_tensors) - tf.reduce_min(grayscale_tensors)), tf.uint8)
-    normalized_tensors = tf.squeeze(normalized_tensors)
 
-    return normalized_tensors, results
+    # # take maximum across channels
+    # gradients = tf.reduce_max(tf.abs(grads), axis=-1)
+
+    # # normalization to 0-255
+    # gradients = (gradients - np.min(gradients)) / (np.max(gradients) - np.min(gradients))
+    # return gradients.numpy() * 255, results
+    for grad in grads:
+        # take maximum across channels
+        gradient = tf.reduce_max(tf.abs(grad), axis=-1)
+
+        # convert to numpy
+        gradient = gradient.numpy()
+
+        # # normaliz between 0 and 255
+        min_val, max_val = np.min(gradient), np.max(gradient)
+        smap = (gradient - min_val) / (max_val - min_val)
+
+        smaps.append(np.uint8(smap*255))
+
+    return smaps, results
+    # # supress the channel dimension
+    # grayscale_tensor = tf.reduce_sum(tf.abs(grad), axis=-1)
+    # # normalizaion
+    # normalized_tensor = tf.cast(255 * (grayscale_tensor - tf.reduce_min(grayscale_tensor)) / (
+    #     tf.reduce_max(grayscale_tensor) - tf.reduce_min(grayscale_tensor)), tf.uint8)
+    # normalized_tensor = tf.squeeze(normalized_tensor)
+
+    # smaps.append(normalized_tensor)
 
 
 def saliency_graph_cut(imgs, saliency_map, SIGMA, threshold):

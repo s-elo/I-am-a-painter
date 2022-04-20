@@ -23,7 +23,7 @@ if gpus:
         print(e)
 
 
-def get_model(from_saved=False, learning_schedule=False, lambda_cycle=tf.Variable(8.0), lambda_id=tf.Variable(1.)):
+def get_model(from_saved=False, learning_schedule=False, lr=2e-4, lambda_cycle=tf.Variable(8.0), lambda_id=tf.Variable(1.)):
     if (os.path.exists('./checkpoints') == True):
         # load from the checkpoints
         generator_g, generator_f, discriminator_y, discriminator_x = load_models(
@@ -45,11 +45,11 @@ def get_model(from_saved=False, learning_schedule=False, lambda_cycle=tf.Variabl
 
     # define the optimizers
     if (learning_schedule == False):
-        generator_g_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-        generator_f_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        generator_g_optimizer = tf.keras.optimizers.Adam(lr, beta_1=0.5)
+        generator_f_optimizer = tf.keras.optimizers.Adam(lr, beta_1=0.5)
 
-        discriminator_x_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
-        discriminator_y_optimizer = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+        discriminator_x_optimizer = tf.keras.optimizers.Adam(lr, beta_1=0.5)
+        discriminator_y_optimizer = tf.keras.optimizers.Adam(lr, beta_1=0.5)
     else:
         initial_learning_rate = 1e-4
         decay_steps = 28000
