@@ -2,6 +2,9 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, LeakyReLU
 from tensorflow.keras.initializers import TruncatedNormal
 import tensorflow_addons as tfa
+import PIL
+import numpy as np
+import cv2
 
 
 def res_block(res_input, output_channels):
@@ -79,3 +82,34 @@ def load_models(load_path='./saved_models', model='all'):
             f'{load_path}/p_disc', compile=False)
 
         return m_gen, p_gen, m_disc, p_disc
+
+
+def get_monet_style(imgs, monet_generator, output_shape):
+    ret = []
+
+    for img in imgs:
+        # resize and reshape for the generator
+        img = cv2.resize(img, (256, 256),
+                         interpolation=cv2.INTER_CUBIC)
+        # the img has been processed by /255 before
+        img = np.array(img) * 255
+        img = decode_image(img, (256, 256))
+
+        gen_img = monet_generator(img, training=False)[0].numpy()
+        gen_img = (gen_img * 127.5 + 127.5).astype(np.uint8)
+
+        # reshape back
+        gen_img = cv2.resize(gen_img, output_shape,
+                             interpolation=cv2.INTER_CUBIC)
+
+        ret.append(gen_img)
+
+    return np.array(ret)
+
+
+def decode_image(image, IMAGE_SIZE):
+    # image = PIL.Image.fromarray(image)
+    # image = tf.image.decode_jpeg(image, channels=3)
+    image = (tf.cast(image, tf.float32) / 127.5) - 1
+    image = tf.reshape(image, [1, *IMAGE_SIZE, 3])
+    return image
