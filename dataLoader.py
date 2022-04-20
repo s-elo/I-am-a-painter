@@ -1,6 +1,8 @@
 import tensorflow as tf
 import os
 import cv2
+import matplotlib.pyplot as plt
+import PIL
 import numpy as np
 
 if os.path.exists('./dataset'):
@@ -106,7 +108,7 @@ def get_saliency_data(img_shape=(224, 224)):
             img_path = f'{class_path}/{img_name}'
 
             # get the real image data
-            i = cv2.imread(img_path)
+            i = plt.imread(img_path)
             # resize
             i = cv2.resize(i, img_shape, interpolation=cv2.INTER_CUBIC)
             # reshape
@@ -126,5 +128,9 @@ if __name__ == '__main__':
 
     imgs, labels = get_saliency_data()
     print(imgs.shape, labels.shape)
+
+    im = PIL.Image.fromarray(imgs[7])
+    im.save("./ret.jpg")
+
     # print(imagenet_class_to_idx())
     # print(imagenet_idx_to_label())
