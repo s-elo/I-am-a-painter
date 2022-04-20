@@ -60,5 +60,5 @@ def get_saliency_map(images, labels):
     # smaps.append(normalized_tensor)
 
 
-def saliency_graph_cut(imgs, saliency_map, SIGMA, threshold):
-    return graph_cut(imgs, saliency_map, SIGMA, threshold)
+def saliency_graph_cut(imgs, saliency_map, background_quantile, foreground_quantile):
+    return graph_cut(imgs, saliency_map, background_quantile, foreground_quantile)
