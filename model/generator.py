@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, Conv2DTranspose, Input, Conv2DTranspose
 from tensorflow.keras.initializers import TruncatedNormal
-from tensorflow_examples.models.pix2pix import pix2pix
+# from tensorflow_examples.models.pix2pix import pix2pix
 from model.utils import res_block, instance_norm, up_sample, down_sample
 
 OUTPUT_CHANNELS = 3

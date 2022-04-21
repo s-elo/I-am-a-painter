@@ -1,5 +1,5 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import os
 import shutil
 from model.generator import get_generator

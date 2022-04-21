@@ -1,8 +1,6 @@
 import maxflow
 import numpy as np
 import math
-import cv2
-from sklearn.mixture import GaussianMixture
 
 
 def get_mask(saliency_map, img, background_quantile, foreground_quantile):
@@ -10,12 +8,6 @@ def get_mask(saliency_map, img, background_quantile, foreground_quantile):
 
     g = maxflow.Graph[int]()
     nodeids = g.add_grid_nodes(saliency_map.shape)
-
-    # get GMM models
-    flatten_channels = np.reshape(img, (img.shape[0]*img.shape[1], 3))
-    assert(flatten_channels.shape == (299*299, 3))
-
-    gmm = GaussianMixture(n_components=2, random_state=0).fit(flatten_channels)
 
     # get the quantile thresholds
     background_threshold = np.quantile(saliency_map, background_quantile)
@@ -44,23 +36,11 @@ def get_mask(saliency_map, img, background_quantile, foreground_quantile):
 
             # t-links
             saliency_pixel = saliency_map[row, col]
-            pixel = img[row, col, :]
-
-            probs = gmm.predict_proba([pixel])[0]
-            max_prob = max(probs)
-            # g.add_tedge(nodeids[row, col], probs[0]*K, probs[1]*K)
 
             if (saliency_pixel >= foreground_threshold):
                 g.add_tedge(nodeids[row, col], K, 0)
             elif (saliency_pixel <= background_threshold):
                 g.add_tedge(nodeids[row, col], 0, K)
-            # else:
-            #     if (probs[0] == 0):
-            #         probs[0] = 0.00000001
-            #     if (probs[1] == 0):
-            #         probs[1] = 0.00000001
-            #     g.add_tedge(nodeids[row, col], -
-            #                 np.log(probs[0]), -np.log(probs[1]))
 
     # Find the maximum flow.
     g.maxflow()

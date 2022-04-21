@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow.keras.layers import Conv2D, LeakyReLU, Input, ZeroPadding2D
 from tensorflow.keras.initializers import TruncatedNormal
-from tensorflow_examples.models.pix2pix import pix2pix
+# from tensorflow_examples.models.pix2pix import pix2pix
 from model.utils import instance_norm, down_sample
 
 OUTPUT_CHANNELS = 3

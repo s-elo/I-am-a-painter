@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, LeakyReLU
 from tensorflow.keras.initializers import TruncatedNormal
 import tensorflow_addons as tfa
-import PIL
+# import PIL
 import numpy as np
 import cv2
 
