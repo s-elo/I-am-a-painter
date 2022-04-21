@@ -44,7 +44,17 @@ def load_dataset(filenames):
     return dataset
 
 
-def get_dataset(batch_size=16, repeat=False, shuffle=False):
+def get_dataset(batch_size=16, repeat=False, shuffle=False, from_examples=False):
+    if (from_examples == True):
+        imgs = []
+        for i in range(0, 5):
+            im = plt.imread(f'./dataset/examples/{i}.jpg')
+            im = (tf.cast(im, tf.float32) / 127.5) - 1
+            im = tf.reshape(im, [1, *IMAGE_SIZE, 3])
+            imgs.append(im)
+
+        return imgs
+
     monet_ds = load_dataset(MONET_FILENAMES)
     photo_ds = load_dataset(PHOTO_FILENAMES)
 
@@ -121,16 +131,24 @@ def get_saliency_data(img_shape=(224, 224)):
 
 
 if __name__ == '__main__':
-    print('Monet TFRecord Files:', len(MONET_FILENAMES))
-    print('Photo TFRecord Files:', len(PHOTO_FILENAMES))
+    # print('Monet TFRecord Files:', len(MONET_FILENAMES))
+    # print('Photo TFRecord Files:', len(PHOTO_FILENAMES))
     monet_ds, photo_ds = get_dataset()
-    print(monet_ds, photo_ds)
 
-    imgs, labels = get_saliency_data()
-    print(imgs.shape, labels.shape)
+    ds_iter = iter(photo_ds)
+    for n_sample in range(5):
+        example_sample = next(ds_iter)
+        # print(type(example_sample[0]))
+        im = (example_sample[0].numpy() * 127.5 + 127.5).astype(np.uint8)
+        print(im.shape)
+        im = PIL.Image.fromarray(im)
 
-    im = PIL.Image.fromarray(imgs[7])
-    im.save("./ret.jpg")
+        im.save(f"./dataset/examples/{n_sample}.jpg")
+
+    # imgs, labels = get_saliency_data()
+    # print(imgs.shape, labels.shape)
+    # im = PIL.Image.fromarray(imgs[7])
+    # im.save("./ret.jpg")
 
     # print(imagenet_class_to_idx())
     # print(imagenet_idx_to_label())
