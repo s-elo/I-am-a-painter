@@ -47,7 +47,7 @@ def get_saliency_map(images, labels):
         min_val, max_val = np.min(gradient), np.max(gradient)
         smap = (gradient - min_val) / (max_val - min_val)
 
-        smaps.append(np.uint8(smap*255))
+        smaps.append(np.int8(smap*255))
 
     return smaps, results
     # # supress the channel dimension
